@@ -6,17 +6,15 @@
   "author": "",
   "license": "MIT",
   "scripts": {
-    "dev": "nodemon --watch src/**/*.ts --exec ts-node ./src/app.ts",
+    "dev": "nodemon --watch ./src/**/*.ts --exec ts-node ./src/app.ts",
     "build": "tsc",
     "start": "node ./dist/app.js",
     "lint": "eslint --fix --quiet src/**/*.ts",
-    "format": "prettier --loglevel silent --write src/**/*.ts",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "format": "prettier --loglevel silent --write src/**/*.ts"
   },
   "dependencies": {
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "mongodb": "^4.12.1"
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
