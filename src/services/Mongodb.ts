@@ -1,6 +1,10 @@
 import * as mongoDB from 'mongodb';
 
-export const collections: { message?: mongoDB.Collection } = {};
+export interface IMongodb {
+  db?: mongoDB.Db;
+}
+
+const Mongodb: IMongodb = {};
 
 export async function connectToDatabase() {
   try {
@@ -10,18 +14,14 @@ export async function connectToDatabase() {
 
     await client.connect();
 
-    const db: mongoDB.Db = client.db(process.env.DB_NAME);
-
-    const gamesCollection: mongoDB.Collection = db.collection(
-      process.env.GAMES_COLLECTION_NAME ?? '',
-    );
-
-    collections.message = gamesCollection;
+    Mongodb.db = client.db(process.env.DB_NAME);
 
     console.log(
-      `Successfully connected to database: ${db.databaseName} and collection: ${gamesCollection.collectionName}`,
+      `Successfully connected to database: ${Mongodb.db.databaseName}`,
     );
   } catch (err) {
     console.log(err);
   }
 }
+
+export default Mongodb;
