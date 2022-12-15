@@ -12,6 +12,11 @@ export default class Router {
     this.apis = [];
   }
 
+  options(endpoint: string, handler: ApiHandler) {
+    this.apis.push(new Api(endpoint, Method.OPTIONS, handler));
+    return this;
+  }
+
   get(endpoint: string, handler: ApiHandler) {
     this.apis.push(new Api(endpoint, Method.GET, handler));
     return this;
@@ -39,12 +44,12 @@ export default class Router {
         const params = api?.getParams(req) ?? new Map();
         return api?.getRawApiHandler(params);
       })() ??
-      ((_) =>
+      (() =>
         ({
           protocol: 'HTTP/1.1',
           headers: new Map(),
           status: 'OK',
-          statusCode: 200,
+          statusCode: 404,
           body: `<html><body><h1>404 Not Found</h1></body></html>`,
         } as Response))
     );

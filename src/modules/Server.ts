@@ -1,21 +1,22 @@
 import * as net from 'net';
+import tls from 'tls';
 import Router from './Router';
 import Mongodb, { IMongodb, connectToDatabase } from '../services/Mongodb';
 import parseRequest from '../utils/parseRequest';
 import compileResponse from '../utils/compileResponse';
 import responseBuilder from '../utils/responseBuilder';
 
-const PORT = 3031;
-const IP = '127.0.0.1';
-const BACKLOG = 100;
+const PORT = 3000;
 
 export default class Server {
   router: Router;
   private db: IMongodb;
+  private chunk: string;
 
   constructor() {
     this.router = new Router();
     this.db = Mongodb;
+    this.chunk = '';
   }
 
   run() {
@@ -23,10 +24,19 @@ export default class Server {
 
     net
       .createServer()
-      .listen(PORT, IP, BACKLOG)
+      .listen(PORT)
       .on('connection', (socket) =>
         socket.on('data', async (buffer) => {
-          const request = parseRequest(buffer.toString());
+          const request = parseRequest(this.chunk + buffer.toString());
+
+          if (
+            (Number(request.headers?.get('Content-Length')) ?? 0) >
+            request.body.length
+          ) {
+            // incomplete request
+            this.chunk += buffer.toString();
+            return;
+          }
 
           const response = await (async () => {
             try {
@@ -36,11 +46,16 @@ export default class Server {
             } catch (err) {
               return responseBuilder(
                 500,
-                { 'Content-Type': 'application/json' },
+                {
+                  'Content-Type': 'application/json',
+                  'Access-Control-Allow-Origin': '*',
+                },
                 JSON.stringify({ error: 'Server error' }),
               );
             }
           })();
+
+          this.chunk = '';
 
           socket.write(compileResponse(response));
 
