@@ -1,5 +1,5 @@
-import * as net from 'net';
-import tls from 'tls';
+import * as tls from 'tls';
+import * as fs from 'fs';
 import Router from './Router';
 import Mongodb, { IMongodb, connectToDatabase } from '../services/Mongodb';
 import parseRequest from '../utils/parseRequest';
@@ -7,6 +7,11 @@ import compileResponse from '../utils/compileResponse';
 import responseBuilder from '../utils/responseBuilder';
 
 const PORT = 3000;
+
+const options = {
+  key: fs.readFileSync('server.key'),
+  cert: fs.readFileSync('server.crt'),
+};
 
 export default class Server {
   router: Router;
@@ -22,10 +27,8 @@ export default class Server {
   run() {
     connectToDatabase();
 
-    net
-      .createServer()
-      .listen(PORT)
-      .on('connection', (socket) =>
+    tls
+      .createServer(options, (socket) => {
         socket.on('data', async (buffer) => {
           const request = parseRequest(this.chunk + buffer.toString());
 
@@ -60,7 +63,8 @@ export default class Server {
           socket.write(compileResponse(response));
 
           socket.end();
-        }),
-      );
+        });
+      })
+      .listen(PORT);
   }
 }
